@@ -1,0 +1,43 @@
+.MODEL SMALL
+.STACK
+.CODE
+    MOV AX, @DATA
+    MOV DS, AX
+
+    MOV AL, 82H
+    MOV DX, 1C63H
+    OUT DX,AL
+
+    MOV AL, 88H
+    MOV CX,200H
+
+    LP1: MOV DX, 1C60H
+         OUT DX, AL
+         CALL DELAY
+         ROL AL, 01
+         DEC CX
+         JNZ LP1
+    MOV AL,88H
+    MOV CX,200H
+    LP2: MOV DX, 1C60H
+         OUT DX, AL   
+         CALL DELAY
+         ROR AL, 01
+         DEC CX
+         JNZ LP2
+    MOV AH,4CH
+    INT 21H
+
+    DELAY PROC
+    PUSH AX
+    PUSH CX
+    MOV AX, 04FFH
+    LP3: MOV CX, 0FFFFH
+    LP4: LOOP LP4
+    DEC AX
+    JNZ LP3
+    POP CX
+    POP AX
+    RET
+    DELAY ENDP
+END
