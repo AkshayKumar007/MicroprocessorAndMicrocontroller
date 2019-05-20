@@ -1,0 +1,82 @@
+INITDS MACRO
+    MOV AX,@DATA
+    MOV DS,AX
+ENDM
+
+INIT8255 MACRO
+    MOV AL, CW
+    MOV DX, CR
+    OUT DX, AL
+ENDM
+
+OUTPB MACRO
+    MOV DX, PB
+    OUT DX, AL
+ENDM
+
+OUTPC MACRO
+    MOV DX, PC
+    OUT DX, AL
+ENDM
+
+EXIT MACRO
+    MOV AH, 4CH
+    INT 21H
+ENDM
+
+.MODEL SMALL
+.STACK
+.DATA
+    PB EQU 1C61H
+    PC EQU 1C62H
+    CR EQU 1C63H
+    CW DB 82H
+    M1 DB 86H,0AFH,0CFH,8EH
+    M2 DB 8CH,0C7H,86H,89H
+    M3 DB 10,13,"ENTER ANY KEY TO EXIT $"
+.CODE
+    INITDS
+    INIT8255
+    MOV DX, OFFSET M3
+    MOV AH, 09H
+    INT 21H
+    AGAIN : MOV SI, OFFSET M1
+            CALL DISP
+            CALL DELAY; CHECK1
+            MOV DI, OFFSET M2
+            CALL DISP
+            CALL DELAY
+            MOV AH, 01H
+            INT 16H
+            JZ AGAIN
+    EXIT
+
+    DISP PROC
+    MOV CX, 04H
+    NEXT_CHAR : MOV BL, 08H
+                MOV AL,[SI]
+                NEXT_BIT :  ROL AL, 1
+                            OUTPB
+                            PUSH AX
+                            MOV AL, 00H
+                            OUTPC
+                            MOV AL, 11H
+                            OUTPC
+                            POP AX ; CHECK2
+                            DEC BL
+                JNZ NEXT_BIT
+                INC SI;CHECK3
+    LOOP NEXT_CHAR
+    RET
+    DISP ENDP
+
+    DELAY PROC
+    MOV BX 04FFH
+    B2: MOV CX, 0FFFFH
+        B1: LOOP B1
+        DEC BX
+        JNZ B2
+    RET
+    DELAY ENDP
+
+END
