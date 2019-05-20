@@ -1,0 +1,79 @@
+INITDS MACRO
+    MOV AX, @DATA
+    MOV DS, AX
+ENDM
+
+INIT8255 MACRO
+    MOV AL, CW
+    MOV DX, CR
+    OUT DX, AL ;CHECK1
+ENDM
+
+OUTPA MACRO
+    MOV AL, PA
+    MOV DX, AL
+ENDM
+
+DISP_MSG MACRO MSG
+    MOV DX, OFFSET MSG
+    MOV AH, 09H
+    INT 21H
+ENDM
+
+EXIT MACRO
+    MOV AH, 4CH
+    INT 21H
+ENDM
+
+.MODEL SMALL
+.STACK
+.DATA
+    PA EQU 1C60H
+    CR EQU 1C63H
+    CW DB 82H ;CHECK2
+    MSG DB 10,13,"PRESS KEY TO EXIT$"
+.CODE
+    INITDS
+    INIT8255
+    DISP_MSG MSG
+    MOV AL, 0H
+    UP: 
+        OUTPA
+        CALL DELAY
+        CALL KBHIT
+        ADD AL, 01H
+        DAA
+        CMP AL, 099H
+        JNE UP
+    DOWN:
+        OUTPA 
+        CALL DELAY
+        CALL KBHIT
+        ADD AL,099H
+        DAA
+        CMP AL,099H
+        JNE DOWN
+    
+    EXIT
+
+    DELAY PROC
+        MOV BX, 04FFH
+        B2: MOV CX, 0FFFFH
+        B1: LOOP B1
+            DEC BX
+            JNZ B2
+        RET
+    ENDP
+
+    KBHIT PROC
+        PUSH AX
+        MOV AH, 01H
+        INT 1C60H
+        JNZ DONE
+        POP AX
+        RET
+        DONE : EXIT
+    ENDP
+END
+
+
